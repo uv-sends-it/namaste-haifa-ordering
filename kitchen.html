@@ -284,7 +284,7 @@
       return tsA - tsB;
     });
 
-    const active = entries.filter(([, o]) => o.status !== 'done');
+    const active = entries.filter(([, o]) => o.status !== 'done' && o.status !== 'cleared');
     const recentDone = entries.filter(([, o]) => o.status === 'done').slice(-3);
     const toShow = [...active, ...recentDone];
 
