@@ -73,12 +73,12 @@
     ];
     const SECTION_NAMES = { S: 'Single', M: 'Middle', W: 'Wall' };
 
-    function generate() {
+    async function generate() {
       const baseUrl = document.getElementById('base-url').value.trim().replace(/\/$/, '');
       const grid = document.getElementById('grid');
       grid.innerHTML = '';
 
-      TABLES.forEach(tableId => {
+      for (const tableId of TABLES) {
         const url = `${baseUrl}/index.html?table=${tableId}`;
         const section = SECTION_NAMES[tableId[0]] || '';
         const card = document.createElement('div');
@@ -88,8 +88,8 @@
         card.appendChild(canvas);
         grid.appendChild(card);
 
-        QRCode.toCanvas(canvas, url, { width: 160, margin: 1, color: { dark: '#2d1a00', light: '#ffffff' } });
-      });
+        await QRCode.toCanvas(canvas, url, { width: 160, margin: 1, color: { dark: '#2d1a00', light: '#ffffff' } });
+      }
     }
 
     generate();
