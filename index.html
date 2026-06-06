@@ -511,14 +511,22 @@
   // State
   const cart = {};
   const urlParams = new URLSearchParams(window.location.search);
-  const selectedTable = urlParams.get('table') || '';
+  const rawTable = (urlParams.get('table') || '').toUpperCase();
+  const selectedTable = TABLES.includes(rawTable) ? rawTable : '';
+
+  // Remove table param from URL bar without triggering reload
+  if (rawTable) {
+    const cleanUrl = window.location.pathname;
+    window.history.replaceState({}, '', cleanUrl);
+  }
 
   const tableDisplay = document.getElementById('table-display');
   if (selectedTable) {
     tableDisplay.textContent = selectedTable;
   } else {
-    tableDisplay.textContent = 'Unknown – ask staff';
+    tableDisplay.textContent = 'Invalid table – ask staff to scan again';
     tableDisplay.style.color = '#c0392b';
+    tableDisplay.style.fontSize = '0.8rem';
   }
 
   // Build category nav
