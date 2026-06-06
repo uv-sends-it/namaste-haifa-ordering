@@ -419,11 +419,9 @@
   const urlParams = new URLSearchParams(window.location.search);
   const selectedTable = urlParams.get('table') || '';
 
-  const sectionNames = { S: 'Single', M: 'Middle', W: 'Wall' };
   const tableDisplay = document.getElementById('table-display');
   if (selectedTable) {
-    const section = sectionNames[selectedTable[0]] || '';
-    tableDisplay.textContent = section ? `${selectedTable} (${section})` : selectedTable;
+    tableDisplay.textContent = selectedTable;
   } else {
     tableDisplay.textContent = 'Unknown – ask staff';
     tableDisplay.style.color = '#c0392b';
