@@ -74,7 +74,7 @@
         img.src = qrUrl(url);
         img.alt = `QR for ${tableId}`;
 
-        card.innerHTML = `<h3>${tableId}</h3><div class="section-label">${section}</div>`;
+        card.innerHTML = `<h3>${tableId}</h3>`;
         card.appendChild(img);
         grid.appendChild(card);
       });
