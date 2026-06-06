@@ -3,7 +3,7 @@
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyA76nteP_CO3_NTRjPg7W-SUerMgWs6ZK4",
   authDomain: "namaste-haifa-menu.firebaseapp.com",
-  databaseURL: "https://namaste-haifa-menu-default-rtdb.firebaseio.com",
+  databaseURL: "https://namaste-haifa-menu-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "namaste-haifa-menu",
   storageBucket: "namaste-haifa-menu.firebasestorage.app",
   messagingSenderId: "427289306096",
