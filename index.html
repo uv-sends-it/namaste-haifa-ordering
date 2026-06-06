@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Namaste Haifa – Menu</title>
+  <link rel="icon" type="image/jpeg" href="1707323833phpcHbMD1.jpg">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -17,16 +18,19 @@
     header {
       background: linear-gradient(135deg, #c0392b, #e67e22);
       color: white;
-      padding: 20px 16px 16px;
-      text-align: center;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
       position: sticky;
       top: 0;
       z-index: 100;
       box-shadow: 0 2px 8px rgba(0,0,0,0.2);
     }
 
-    header h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: 0.5px; }
-    header p { font-size: 0.85rem; opacity: 0.9; margin-top: 2px; }
+    header img { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; flex-shrink: 0; }
+    header h1 { font-size: 1.3rem; font-weight: 700; letter-spacing: 0.5px; }
+    header p { font-size: 0.8rem; opacity: 0.9; margin-top: 2px; }
 
     #table-bar {
       background: #fff3e0;
@@ -344,8 +348,11 @@
 <!-- MENU PAGE -->
 <div id="menu-page" class="page active">
   <header>
-    <h1>🍛 Namaste Haifa</h1>
-    <p>Scan · Order · Enjoy</p>
+    <img src="1707323833phpcHbMD1.jpg" alt="Namaste Haifa">
+    <div>
+      <h1>Namaste Haifa</h1>
+      <p>Scan · Order · Enjoy</p>
+    </div>
   </header>
 
   <div id="table-bar">
