@@ -51,7 +51,6 @@
     }
 
     #pin-error { color: #e74c3c; font-size: 0.9rem; display: none; }
-
     #main { display: none; }
 
     header {
@@ -79,6 +78,33 @@
       50% { opacity: 0.3; }
     }
 
+    /* TABS */
+    .tab-bar {
+      background: white;
+      display: flex;
+      border-bottom: 2px solid #e0e0e0;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 12px 8px;
+      border: none;
+      background: white;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #999;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      transition: all 0.15s;
+    }
+
+    .tab-btn.active {
+      color: #c0392b;
+      border-bottom-color: #c0392b;
+    }
+
+    /* FILTER BAR */
     .filter-bar {
       background: white;
       padding: 10px 16px;
@@ -100,12 +126,9 @@
       cursor: pointer;
     }
 
-    .filter-btn.active {
-      background: #c0392b;
-      color: white;
-    }
+    .filter-btn.active { background: #c0392b; color: white; }
 
-    #orders-container { padding: 16px; }
+    #orders-container, #paid-container { padding: 16px; }
 
     .table-card {
       background: white;
@@ -122,6 +145,10 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+    }
+
+    .paid-header {
+      background: linear-gradient(135deg, #27ae60, #2ecc71);
     }
 
     .table-title { font-size: 1.1rem; font-weight: 700; }
@@ -178,8 +205,14 @@
       border-top: 2px solid #f0c080;
     }
 
+    .paid-total {
+      background: #f0fdf4;
+      border-top-color: #a7f3c8;
+    }
+
     .total-label { font-weight: 700; font-size: 0.95rem; color: #555; }
     .total-amount { font-weight: 700; font-size: 1.2rem; color: #c0392b; }
+    .paid-total .total-amount { color: #27ae60; }
 
     .print-btn {
       background: #c0392b;
@@ -193,8 +226,8 @@
     }
 
     .clear-btn {
-      background: #ecf0f1;
-      color: #666;
+      background: #27ae60;
+      color: white;
       border: none;
       border-radius: 8px;
       padding: 8px 16px;
@@ -211,7 +244,13 @@
       border-top: 1px solid #f0f0f0;
     }
 
-    #empty-msg {
+    .paid-time {
+      font-size: 0.78rem;
+      color: #27ae60;
+      font-weight: 600;
+    }
+
+    #empty-msg, #empty-paid-msg {
       text-align: center;
       padding: 60px 20px;
       color: #aaa;
@@ -219,7 +258,7 @@
     }
 
     @media print {
-      .print-btn, .clear-btn, .filter-bar, header, .table-actions { display: none !important; }
+      .print-btn, .clear-btn, .filter-bar, .tab-bar, header, .table-actions { display: none !important; }
       .table-card { box-shadow: none; border: 1px solid #ccc; }
       body { background: white; }
     }
@@ -237,40 +276,60 @@
 
 <div id="main">
   <header>
-    <h1>🧾 Active Orders</h1>
+    <h1>🧾 Orders</h1>
     <div>
       <span class="live-dot"></span>
       <span style="font-size:0.85rem;opacity:0.9;">Live</span>
     </div>
   </header>
 
-  <div class="filter-bar">
-    <strong style="font-size:0.85rem;color:#666;">Show:</strong>
-    <button class="filter-btn active" id="filter-all" onclick="setFilter('all')">All Tables</button>
-    <button class="filter-btn" id="filter-active" onclick="setFilter('active')">Active Only</button>
+  <div class="tab-bar">
+    <button class="tab-btn active" id="tab-active" onclick="switchTab('active')">Active Orders</button>
+    <button class="tab-btn" id="tab-paid" onclick="switchTab('paid')">Paid History</button>
   </div>
 
-  <div id="orders-container">
-    <div id="empty-msg">No orders yet</div>
+  <!-- ACTIVE ORDERS TAB -->
+  <div id="active-tab">
+    <div class="filter-bar">
+      <strong style="font-size:0.85rem;color:#666;">Show:</strong>
+      <button class="filter-btn active" id="filter-all" onclick="setFilter('all')">All Tables</button>
+      <button class="filter-btn" id="filter-ready" onclick="setFilter('ready')">Kitchen Done Only</button>
+    </div>
+    <div id="orders-container">
+      <div id="empty-msg">No active orders</div>
+    </div>
+  </div>
+
+  <!-- PAID HISTORY TAB -->
+  <div id="paid-tab" style="display:none">
+    <div class="filter-bar">
+      <strong style="font-size:0.85rem;color:#666;">Period:</strong>
+      <button class="filter-btn active" id="paid-filter-today" onclick="setPaidFilter('today')">Today</button>
+      <button class="filter-btn" id="paid-filter-week" onclick="setPaidFilter('week')">This Week</button>
+      <button class="filter-btn" id="paid-filter-all" onclick="setPaidFilter('all')">All Time</button>
+    </div>
+    <div id="paid-container">
+      <div id="empty-paid-msg">No paid orders yet</div>
+    </div>
   </div>
 </div>
 
 <script src="firebase-config.js"></script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getDatabase, ref, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+  import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
   const app = initializeApp(FIREBASE_CONFIG);
   const db = getDatabase(app);
 
   window._clearTable = async (tableNum) => {
-    if (!confirm(`Clear all orders for Table ${tableNum}? (Table has been paid)`)) return;
+    if (!confirm(`Mark Table ${tableNum} as paid and clear?`)) return;
     const ordersRef = ref(db, 'orders');
     onValue(ordersRef, async (snap) => {
       const data = snap.val() || {};
       const promises = Object.entries(data)
-        .filter(([, order]) => String(order.table) === String(tableNum))
-        .map(([id]) => update(ref(db, 'orders/' + id), { status: 'cleared' }));
+        .filter(([, order]) => String(order.table) === String(tableNum) && order.status !== 'cleared')
+        .map(([id]) => update(ref(db, 'orders/' + id), { status: 'cleared', paidAt: Date.now() }));
       await Promise.all(promises);
     }, { onlyOnce: true });
   };
@@ -293,12 +352,33 @@
   });
 
   let currentFilter = 'all';
+  let currentPaidFilter = 'today';
+  let currentTab = 'active';
+
+  window.switchTab = (tab) => {
+    currentTab = tab;
+    document.getElementById('active-tab').style.display = tab === 'active' ? 'block' : 'none';
+    document.getElementById('paid-tab').style.display = tab === 'paid' ? 'block' : 'none';
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    if (window._lastData) {
+      if (tab === 'active') renderActive(window._lastData);
+      else renderPaid(window._lastData);
+    }
+  };
 
   window.setFilter = (f) => {
     currentFilter = f;
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('#active-tab .filter-btn').forEach(b => b.classList.remove('active'));
     document.getElementById('filter-' + f).classList.add('active');
-    if (window._lastData) renderOrders(window._lastData);
+    if (window._lastData) renderActive(window._lastData);
+  };
+
+  window.setPaidFilter = (f) => {
+    currentPaidFilter = f;
+    document.querySelectorAll('#paid-tab .filter-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('paid-filter-' + f).classList.add('active');
+    if (window._lastData) renderPaid(window._lastData);
   };
 
   function startListening() {
@@ -306,7 +386,8 @@
     onValue(ordersRef, (snapshot) => {
       const data = snapshot.val() || {};
       window._lastData = data;
-      renderOrders(data);
+      if (currentTab === 'active') renderActive(data);
+      else renderPaid(data);
     });
   }
 
@@ -318,14 +399,29 @@
     return Math.floor(diff / 3600) + 'h ago';
   }
 
-  function renderOrders(data) {
-    const container = document.getElementById('orders-container');
+  function formatTime(ts) {
+    if (!ts) return '';
+    const d = new Date(ts);
+    return d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }) + ' ' +
+      d.toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' });
+  }
 
-    // Group by table
+  function startOfDay() {
+    const d = new Date(); d.setHours(0,0,0,0); return d.getTime();
+  }
+
+  function startOfWeek() {
+    const d = new Date(); d.setHours(0,0,0,0);
+    d.setDate(d.getDate() - d.getDay()); return d.getTime();
+  }
+
+  function renderActive(data) {
+    const container = document.getElementById('orders-container');
     const byTable = {};
+
     Object.entries(data).forEach(([id, order]) => {
       if (order.status === 'cleared') return;
-      if (currentFilter === 'active' && order.status === 'done') return;
+      if (currentFilter === 'ready' && order.status !== 'done') return;
       const t = String(order.table);
       if (!byTable[t]) byTable[t] = [];
       byTable[t].push({ id, ...order });
@@ -334,7 +430,7 @@
     const tables = Object.keys(byTable).sort((a, b) => Number(a) - Number(b));
 
     if (tables.length === 0) {
-      container.innerHTML = '<div id="empty-msg">No orders</div>';
+      container.innerHTML = '<div id="empty-msg">No active orders</div>';
       return;
     }
 
@@ -342,9 +438,8 @@
 
     tables.forEach(tableNum => {
       const orders = byTable[tableNum].sort((a, b) => {
-        const tsA = typeof a.timestamp === 'number' ? a.timestamp : 0;
-        const tsB = typeof b.timestamp === 'number' ? b.timestamp : 0;
-        return tsA - tsB;
+        return (typeof a.timestamp === 'number' ? a.timestamp : 0) -
+               (typeof b.timestamp === 'number' ? b.timestamp : 0);
       });
 
       const hasNew = orders.some(o => o.status === 'new');
@@ -378,7 +473,7 @@
       card.innerHTML = `
         <div class="table-header">
           <span class="table-title">Table ${tableNum}</span>
-          <span class="table-status">${orders.length} order${orders.length > 1 ? 's' : ''} · ${hasNew ? '🔴 Preparing' : '✅ All done'}</span>
+          <span class="table-status">${orders.length} order${orders.length > 1 ? 's' : ''} · ${hasNew ? '🔴 Preparing' : '✅ Kitchen Done'}</span>
         </div>
         ${ordersHtml}
         <div class="table-total">
@@ -388,6 +483,84 @@
         <div class="table-actions">
           <button class="print-btn" onclick="window.print()">🖨 Print Bill</button>
           <button class="clear-btn" onclick="window._clearTable('${tableNum}')">✓ Paid – Clear Table</button>
+        </div>
+      `;
+
+      container.appendChild(card);
+    });
+  }
+
+  function renderPaid(data) {
+    const container = document.getElementById('paid-container');
+
+    const cutoff = currentPaidFilter === 'today' ? startOfDay()
+                 : currentPaidFilter === 'week' ? startOfWeek()
+                 : 0;
+
+    // Group cleared orders by table+paidAt session (group by paidAt within 1 min)
+    const sessions = [];
+    const seen = new Set();
+
+    Object.entries(data)
+      .filter(([, o]) => o.status === 'cleared' && (o.paidAt || 0) >= cutoff)
+      .sort((a, b) => (a[1].paidAt || 0) - (b[1].paidAt || 0))
+      .forEach(([id, order]) => {
+        // Group orders with same table and paidAt within 60s together
+        const existing = sessions.find(s =>
+          s.table === String(order.table) &&
+          Math.abs((s.paidAt || 0) - (order.paidAt || 0)) < 60000
+        );
+        if (existing) {
+          existing.orders.push({ id, ...order });
+          existing.total += order.total || 0;
+        } else {
+          sessions.push({
+            table: String(order.table),
+            paidAt: order.paidAt || 0,
+            orders: [{ id, ...order }],
+            total: order.total || 0,
+          });
+        }
+      });
+
+    sessions.sort((a, b) => b.paidAt - a.paidAt);
+
+    if (sessions.length === 0) {
+      container.innerHTML = '<div id="empty-paid-msg">No paid orders for this period</div>';
+      return;
+    }
+
+    container.innerHTML = '';
+
+    sessions.forEach(session => {
+      const card = document.createElement('div');
+      card.className = 'table-card';
+
+      const ordersHtml = session.orders.map(order => {
+        const itemsHtml = (order.items || []).map(item => `
+          <div class="bill-item">
+            <span class="bill-item-name">${item.name}</span>
+            <span class="bill-item-qty">×${item.qty}</span>
+            <span class="bill-item-price">$${(item.price * item.qty).toFixed(2)}</span>
+          </div>
+        `).join('');
+        return `
+          <div class="order-block">
+            ${itemsHtml}
+            ${order.notes ? `<div class="order-notes-line">📝 ${order.notes}</div>` : ''}
+          </div>
+        `;
+      }).join('');
+
+      card.innerHTML = `
+        <div class="table-header paid-header">
+          <span class="table-title">Table ${session.table}</span>
+          <span class="paid-time">Paid · ${formatTime(session.paidAt)}</span>
+        </div>
+        ${ordersHtml}
+        <div class="table-total paid-total">
+          <span class="total-label">Total paid</span>
+          <span class="total-amount">$${session.total.toFixed(2)}</span>
         </div>
       `;
 
