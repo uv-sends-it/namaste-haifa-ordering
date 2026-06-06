@@ -11,4 +11,8 @@ const FIREBASE_CONFIG = {
 };
 
 const STAFF_PIN = "0000";
-const TABLE_COUNT = 15;
+const TABLES = [
+  'S1','S2','S3','S4','S5',
+  'M1','M2','M3','M4','M5',
+  'W1','W2','W3','W4','W5',
+];

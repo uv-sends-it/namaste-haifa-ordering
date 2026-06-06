@@ -56,11 +56,7 @@
   <div class="config">
     <div>
       <label>Your GitHub Pages URL (after deploying)</label>
-      <input type="text" id="base-url" placeholder="https://yourusername.github.io/namaste-haifa-ordering" value="https://yourusername.github.io/namaste-haifa-ordering">
-    </div>
-    <div>
-      <label>Tables</label>
-      <input type="number" id="table-count" value="15" min="1" max="100" style="width:80px">
+      <input type="text" id="base-url" placeholder="https://yourusername.github.io/namaste-haifa-ordering" value="https://uv-sends-it.github.io/namaste-haifa-ordering">
     </div>
     <button onclick="generate()">Generate QRs</button>
   </div>
@@ -70,23 +66,30 @@
   <div id="grid"></div>
 
   <script>
+    const TABLES = [
+      'S1','S2','S3','S4','S5',
+      'M1','M2','M3','M4','M5',
+      'W1','W2','W3','W4','W5',
+    ];
+    const SECTION_NAMES = { S: 'Single', M: 'Middle', W: 'Wall' };
+
     function generate() {
       const baseUrl = document.getElementById('base-url').value.trim().replace(/\/$/, '');
-      const count = parseInt(document.getElementById('table-count').value);
       const grid = document.getElementById('grid');
       grid.innerHTML = '';
 
-      for (let i = 1; i <= count; i++) {
-        const url = `${baseUrl}/index.html?table=${i}`;
+      TABLES.forEach(tableId => {
+        const url = `${baseUrl}/index.html?table=${tableId}`;
+        const section = SECTION_NAMES[tableId[0]] || '';
         const card = document.createElement('div');
         card.className = 'qr-card';
-        card.innerHTML = `<h3>Table ${i}</h3>`;
+        card.innerHTML = `<h3>${tableId}</h3><div style="font-size:0.75rem;color:#888;margin-bottom:8px;">${section}</div>`;
         const canvas = document.createElement('canvas');
         card.appendChild(canvas);
         grid.appendChild(card);
 
         QRCode.toCanvas(canvas, url, { width: 160, margin: 1, color: { dark: '#2d1a00', light: '#ffffff' } });
-      }
+      });
     }
 
     generate();
