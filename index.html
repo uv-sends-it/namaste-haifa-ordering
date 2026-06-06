@@ -579,12 +579,13 @@
   }
 
   function resetAndGoMenu() {
-    // Clear cart
     Object.keys(cart).forEach(k => delete cart[k]);
     updateCartBar();
-    // Reset all qty displays
     document.querySelectorAll('.qty-display').forEach(el => el.textContent = '0');
     document.getElementById('order-notes').value = '';
+    const btn = document.getElementById('place-order-btn');
+    btn.disabled = false;
+    btn.textContent = 'Place Order';
     showPage('menu-page');
   }
 
