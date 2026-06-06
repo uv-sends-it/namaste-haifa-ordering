@@ -309,6 +309,7 @@
       <button class="filter-btn active" id="paid-filter-today" onclick="setPaidFilter('today')">Today</button>
       <button class="filter-btn" id="paid-filter-week" onclick="setPaidFilter('week')">This Week</button>
       <button class="filter-btn" id="paid-filter-all" onclick="setPaidFilter('all')">All Time</button>
+      <button class="filter-btn" id="clear-old-btn" onclick="clearOldOrders()" style="margin-left:auto;border-color:#e74c3c;color:#e74c3c;">🗑 Clear Old</button>
     </div>
     <div id="paid-container">
       <div id="empty-paid-msg">No paid orders yet</div>
@@ -319,10 +320,29 @@
 <script src="firebase-config.js"></script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+  import { getDatabase, ref, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
   const app = initializeApp(FIREBASE_CONFIG);
   const db = getDatabase(app);
+
+  window.clearOldOrders = async () => {
+    const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    const ordersRef = ref(db, 'orders');
+    onValue(ordersRef, async (snap) => {
+      const data = snap.val() || {};
+      const toDelete = Object.entries(data).filter(([, o]) => {
+        const ts = o.paidAt || (typeof o.timestamp === 'number' ? o.timestamp : 0);
+        return o.status === 'cleared' && ts < cutoff;
+      });
+      if (toDelete.length === 0) {
+        alert('No orders older than 30 days to delete.');
+        return;
+      }
+      if (!confirm(`Delete ${toDelete.length} paid order${toDelete.length > 1 ? 's' : ''} older than 30 days? This cannot be undone.`)) return;
+      await Promise.all(toDelete.map(([id]) => remove(ref(db, 'orders/' + id))));
+      alert(`Deleted ${toDelete.length} old order${toDelete.length > 1 ? 's' : ''}.`);
+    }, { onlyOnce: true });
+  };
 
   window._clearTable = async (tableNum) => {
     if (!confirm(`Mark Table ${tableNum} as paid and clear?`)) return;
