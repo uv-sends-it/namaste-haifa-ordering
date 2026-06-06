@@ -734,7 +734,7 @@
   function modalValidate() {
     const checked = [...document.querySelectorAll('#curry-list input:checked')];
     const other = document.getElementById('curry-other').value.trim();
-    const valid = checked.length === 3 || other.length > 0;
+    const valid = checked.length === 3 || other.length > 0 || (checked.length > 0 && other.length > 0);
     document.getElementById('modal-add-btn').disabled = !valid;
     // Disable unchecked if 3 already selected
     document.querySelectorAll('#curry-list input').forEach(cb => {
@@ -746,7 +746,8 @@
     if (!_modalItem) return;
     const checked = [...document.querySelectorAll('#curry-list input:checked')].map(cb => cb.value);
     const other = document.getElementById('curry-other').value.trim();
-    const curries = checked.length > 0 ? checked.join(', ') : other;
+    const parts = [...checked, ...(other ? [other] : [])];
+    const curries = parts.join(', ');
     const fullName = `${_modalItem.name} – ${curries}`;
     // Add to cart as a unique key (name + curry combo)
     if (!cart[fullName]) cart[fullName] = { name: fullName, price: _modalItem.price, qty: 0 };
