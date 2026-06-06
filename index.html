@@ -742,12 +742,17 @@
   function modalValidate() {
     const checked = [...document.querySelectorAll('#curry-list input:checked')];
     const other = document.getElementById('curry-other').value.trim();
-    const valid = checked.length === 3 || other.length > 0 || (checked.length > 0 && other.length > 0);
+    const valid = checked.length === 3 || other.length > 0;
     document.getElementById('modal-add-btn').disabled = !valid;
-    // Disable unchecked if 3 already selected
+    // Disable unchecked checkboxes when 3 selected
     document.querySelectorAll('#curry-list input').forEach(cb => {
       if (!cb.checked) cb.parentElement.style.opacity = checked.length >= 3 ? '0.4' : '1';
     });
+    // Disable other field when 3 checkboxes selected
+    const otherEl = document.getElementById('curry-other');
+    otherEl.disabled = checked.length >= 3;
+    otherEl.style.opacity = checked.length >= 3 ? '0.4' : '1';
+    if (checked.length >= 3) otherEl.value = '';
   }
 
   function modalConfirm() {
