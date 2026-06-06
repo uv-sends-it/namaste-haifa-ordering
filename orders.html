@@ -265,21 +265,12 @@
 
   window._clearTable = async (tableNum) => {
     if (!confirm(`Clear all orders for Table ${tableNum}? (Table has been paid)`)) return;
-    const snapshot = await new Promise(resolve => {
-      const ordersRef = ref(db, 'orders');
-      const { onValue: ov } = { onValue: (r, cb) => { const u = ov2(r, snap => { u(); resolve(snap); }); } };
-      // use imported onValue
-    });
-    // Simple approach: mark all as 'cleared'
     const ordersRef = ref(db, 'orders');
     onValue(ordersRef, async (snap) => {
       const data = snap.val() || {};
-      const promises = [];
-      Object.entries(data).forEach(([id, order]) => {
-        if (String(order.table) === String(tableNum)) {
-          promises.push(update(ref(db, 'orders/' + id), { status: 'cleared' }));
-        }
-      });
+      const promises = Object.entries(data)
+        .filter(([, order]) => String(order.table) === String(tableNum))
+        .map(([id]) => update(ref(db, 'orders/' + id), { status: 'cleared' }));
       await Promise.all(promises);
     }, { onlyOnce: true });
   };

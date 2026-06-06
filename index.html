@@ -38,17 +38,8 @@
       font-size: 0.9rem;
     }
 
-    #table-bar label { font-weight: 600; color: #c0392b; white-space: nowrap; }
-
-    #table-select {
-      border: 2px solid #e67e22;
-      border-radius: 8px;
-      padding: 6px 10px;
-      font-size: 0.9rem;
-      background: white;
-      color: #2d1a00;
-      cursor: pointer;
-    }
+    #table-bar .table-label { font-weight: 600; color: #c0392b; }
+    #table-bar .table-num { font-weight: 700; color: #2d1a00; font-size: 1rem; }
 
     .category-nav {
       display: flex;
@@ -358,10 +349,8 @@
   </header>
 
   <div id="table-bar">
-    <label>📍 Table:</label>
-    <select id="table-select">
-      <option value="">Select your table</option>
-    </select>
+    <span class="table-label">📍 Table:</span>
+    <span class="table-num" id="table-display">—</span>
   </div>
 
   <nav class="category-nav" id="category-nav"></nav>
@@ -426,26 +415,17 @@
 </script>
 <script>
   // State
-  const cart = {}; // key: itemName, value: {name, price, qty}
-  let selectedTable = '';
-
-  // Read table from URL param
+  const cart = {};
   const urlParams = new URLSearchParams(window.location.search);
-  const tableParam = urlParams.get('table');
+  const selectedTable = urlParams.get('table') || '';
 
-  // Build table selector
-  const tableSelect = document.getElementById('table-select');
-  for (let i = 1; i <= TABLE_COUNT; i++) {
-    const opt = document.createElement('option');
-    opt.value = i;
-    opt.textContent = `Table ${i}`;
-    tableSelect.appendChild(opt);
+  const tableDisplay = document.getElementById('table-display');
+  if (selectedTable) {
+    tableDisplay.textContent = selectedTable;
+  } else {
+    tableDisplay.textContent = 'Unknown – ask staff';
+    tableDisplay.style.color = '#c0392b';
   }
-  if (tableParam) {
-    tableSelect.value = tableParam;
-    selectedTable = tableParam;
-  }
-  tableSelect.addEventListener('change', () => { selectedTable = tableSelect.value; });
 
   // Build category nav
   const catNav = document.getElementById('category-nav');
@@ -562,8 +542,7 @@
 
   async function placeOrder() {
     if (!selectedTable) {
-      alert('Please select your table number first.');
-      showPage('menu-page');
+      alert('Table not found. Please scan the QR code on your table again.');
       return;
     }
 

@@ -11,4 +11,4 @@ const FIREBASE_CONFIG = {
 };
 
 const STAFF_PIN = "0000";
-const TABLE_COUNT = 20;
+const TABLE_COUNT = 15;
