@@ -1,4 +1,20 @@
+const MAIN_COURSE_OPTIONS = [
+  "Dum Aloo","Rajma Curry","Dal Makhani","Chole","Malai Kofta",
+  "Sarson Da Saag","Malay Chap","Baingan Bharta","Masala Bhindi",
+  "Aloo Tamatar Matar","Matar Paneer","Paneer Lababdar","Paneer Bhurji",
+  "Shahi Paneer","Yellow Dal Tadka",
+];
+
 const MENU = [
+  {
+    category: "Haifa Special",
+    items: [
+      { name: "Fix Thali", desc: "3 curries with 4 phulka roti", price: 14.00, curryPicker: true },
+      { name: "Unlimited Roti Thali", desc: "3 curries one time serve with unlimited phulka roti", price: 18.00, curryPicker: true },
+      { name: "Unlimited Thali", desc: "Unlimited serves of 3 curries and unlimited phulka roti", price: 23.00, curryPicker: true },
+      { name: "Kathiyavadi Thali", desc: "Unlimited Kathiyavadi curries and unlimited phulka roti", price: 33.00 },
+    ]
+  },
   {
     category: "Indian Tiffin Services",
     items: [

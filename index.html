@@ -16,21 +16,22 @@
     }
 
     header {
-      background: linear-gradient(135deg, #c0392b, #e67e22);
-      color: white;
-      padding: 12px 16px;
+      background: white;
+      color: #2d1a00;
+      padding: 10px 16px;
       display: flex;
       align-items: center;
       gap: 12px;
       position: sticky;
       top: 0;
       z-index: 100;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border-bottom: 1px solid #f0e0c0;
     }
 
-    header img { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; flex-shrink: 0; }
-    header h1 { font-size: 1.3rem; font-weight: 700; letter-spacing: 0.5px; }
-    header p { font-size: 0.8rem; opacity: 0.9; margin-top: 2px; }
+    header img { width: 48px; height: 48px; border-radius: 10px; object-fit: cover; flex-shrink: 0; }
+    header h1 { font-size: 1.2rem; font-weight: 700; color: #c0392b; letter-spacing: 0.3px; }
+    header p { font-size: 0.78rem; color: #888; margin-top: 2px; }
 
     #table-bar {
       background: #fff3e0;
@@ -341,6 +342,80 @@
     }
 
     .bottom-pad { height: 80px; }
+
+    /* CURRY PICKER MODAL */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 500;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+
+    .modal-sheet {
+      background: white;
+      border-radius: 20px 20px 0 0;
+      padding: 20px 16px 32px;
+      width: 100%;
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+
+    .modal-title { font-size: 1.1rem; font-weight: 700; color: #c0392b; margin-bottom: 4px; }
+    .modal-subtitle { font-size: 0.85rem; color: #888; margin-bottom: 16px; }
+
+    .curry-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+
+    .curry-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border: 2px solid #f0e0c0;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .curry-option.selected {
+      border-color: #e67e22;
+      background: #fff8f0;
+    }
+
+    .curry-option input[type=checkbox] { width: 18px; height: 18px; accent-color: #e67e22; flex-shrink: 0; }
+    .curry-option label { cursor: pointer; font-size: 0.9rem; }
+
+    .other-label { font-size: 0.85rem; font-weight: 600; color: #555; margin-bottom: 6px; }
+    .other-input {
+      width: 100%;
+      border: 2px solid #f0e0c0;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      color: #2d1a00;
+      margin-bottom: 16px;
+    }
+    .other-input:focus { border-color: #e67e22; outline: none; }
+
+    .modal-add-btn {
+      display: block;
+      width: 100%;
+      background: linear-gradient(135deg, #c0392b, #e67e22);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .modal-add-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .modal-cancel { display: block; text-align: center; margin-top: 10px; color: #aaa; font-size: 0.85rem; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -396,6 +471,19 @@
   <div class="confirm-order-num" id="confirm-order-num"></div>
   <div class="confirm-msg" style="font-size:0.85rem; color:#aaa;">Show this number to staff if needed.</div>
   <button class="new-order-btn" onclick="resetAndGoMenu()">Order More</button>
+</div>
+
+<!-- CURRY PICKER MODAL -->
+<div class="modal-overlay" id="curry-modal">
+  <div class="modal-sheet">
+    <div class="modal-title" id="modal-item-name"></div>
+    <div class="modal-subtitle">Choose 3 curries (or type your own below)</div>
+    <div class="curry-list" id="curry-list"></div>
+    <div class="other-label">Other – type your curry choices:</div>
+    <textarea class="other-input" id="curry-other" rows="2" placeholder="e.g. Aloo Gobi, Palak Paneer…"></textarea>
+    <button class="modal-add-btn" id="modal-add-btn" onclick="modalConfirm()">Add to Order</button>
+    <span class="modal-cancel" onclick="modalClose()">Cancel</span>
+  </div>
 </div>
 
 <!-- CART BAR -->
@@ -462,18 +550,31 @@
       const key = item.name;
       const el = document.createElement('div');
       el.className = 'menu-item';
-      el.innerHTML = `
-        <div class="item-info">
-          <div class="item-name">${item.name}${item.popular ? '<span class="popular-badge">Popular</span>' : ''}</div>
-          <div class="item-desc">${item.desc}</div>
-          <div class="item-price">$${item.price.toFixed(2)}</div>
-        </div>
-        <div class="qty-control">
-          <button class="qty-btn" id="minus-${idx}-${key.replace(/\s/g,'_')}" onclick="changeQty('${key}', ${item.price}, -1, this)">−</button>
-          <span class="qty-display" id="qty-${key.replace(/\s/g,'_')}">0</span>
-          <button class="qty-btn" id="plus-${idx}-${key.replace(/\s/g,'_')}" onclick="changeQty('${key}', ${item.price}, 1, this)">+</button>
-        </div>
-      `;
+      if (item.curryPicker) {
+        el.innerHTML = `
+          <div class="item-info">
+            <div class="item-name">${item.name}</div>
+            <div class="item-desc">${item.desc}</div>
+            <div class="item-price">$${item.price.toFixed(2)}</div>
+          </div>
+          <div class="qty-control">
+            <button class="qty-btn" style="width:auto;border-radius:8px;padding:0 12px;font-size:0.85rem;" onclick="modalOpen('${key}', ${item.price})">Add +</button>
+          </div>
+        `;
+      } else {
+        el.innerHTML = `
+          <div class="item-info">
+            <div class="item-name">${item.name}${item.popular ? '<span class="popular-badge">Popular</span>' : ''}</div>
+            <div class="item-desc">${item.desc}</div>
+            <div class="item-price">$${item.price.toFixed(2)}</div>
+          </div>
+          <div class="qty-control">
+            <button class="qty-btn" id="minus-${idx}-${key.replace(/\s/g,'_')}" onclick="changeQty('${key}', ${item.price}, -1, this)">−</button>
+            <span class="qty-display" id="qty-${key.replace(/\s/g,'_')}">0</span>
+            <button class="qty-btn" id="plus-${idx}-${key.replace(/\s/g,'_')}" onclick="changeQty('${key}', ${item.price}, 1, this)">+</button>
+          </div>
+        `;
+      }
       div.appendChild(el);
     });
 
@@ -596,10 +697,77 @@
     showPage('menu-page');
   }
 
+  // CURRY PICKER MODAL
+  let _modalItem = null;
+
+  function modalOpen(name, price) {
+    _modalItem = { name, price };
+    document.getElementById('modal-item-name').textContent = name;
+    document.getElementById('curry-other').value = '';
+
+    const list = document.getElementById('curry-list');
+    list.innerHTML = '';
+    MAIN_COURSE_OPTIONS.forEach(curry => {
+      const row = document.createElement('div');
+      row.className = 'curry-option';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.id = 'curry-cb-' + curry.replace(/\s/g,'_');
+      cb.value = curry;
+      const lbl = document.createElement('label');
+      lbl.htmlFor = cb.id;
+      lbl.textContent = curry;
+      row.appendChild(cb);
+      row.appendChild(lbl);
+      row.onclick = (e) => {
+        if (e.target !== cb) cb.checked = !cb.checked;
+        row.classList.toggle('selected', cb.checked);
+        modalValidate();
+      };
+      list.appendChild(row);
+    });
+
+    document.getElementById('curry-other').addEventListener('input', modalValidate);
+    document.getElementById('curry-modal').classList.add('open');
+    modalValidate();
+  }
+
+  function modalValidate() {
+    const checked = [...document.querySelectorAll('#curry-list input:checked')];
+    const other = document.getElementById('curry-other').value.trim();
+    const valid = checked.length === 3 || other.length > 0;
+    document.getElementById('modal-add-btn').disabled = !valid;
+    // Disable unchecked if 3 already selected
+    document.querySelectorAll('#curry-list input').forEach(cb => {
+      if (!cb.checked) cb.parentElement.style.opacity = checked.length >= 3 ? '0.4' : '1';
+    });
+  }
+
+  function modalConfirm() {
+    if (!_modalItem) return;
+    const checked = [...document.querySelectorAll('#curry-list input:checked')].map(cb => cb.value);
+    const other = document.getElementById('curry-other').value.trim();
+    const curries = checked.length > 0 ? checked.join(', ') : other;
+    const fullName = `${_modalItem.name} – ${curries}`;
+    // Add to cart as a unique key (name + curry combo)
+    if (!cart[fullName]) cart[fullName] = { name: fullName, price: _modalItem.price, qty: 0 };
+    cart[fullName].qty += 1;
+    updateCartBar();
+    modalClose();
+  }
+
+  function modalClose() {
+    document.getElementById('curry-modal').classList.remove('open');
+    _modalItem = null;
+  }
+
   window.changeQty = changeQty;
   window.showPage = showPage;
   window.placeOrder = placeOrder;
   window.resetAndGoMenu = resetAndGoMenu;
+  window.modalOpen = modalOpen;
+  window.modalConfirm = modalConfirm;
+  window.modalClose = modalClose;
 </script>
 </body>
 </html>
