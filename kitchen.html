@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kitchen – Namaste Haifa</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #1a1a2e;
+      color: #eee;
+      min-height: 100vh;
+    }
+
+    #pin-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      gap: 16px;
+      padding: 24px;
+    }
+
+    #pin-screen h2 { font-size: 1.4rem; color: #f39c12; }
+    #pin-screen p { color: #aaa; font-size: 0.9rem; }
+
+    #pin-input {
+      font-size: 1.5rem;
+      letter-spacing: 0.5rem;
+      text-align: center;
+      width: 160px;
+      padding: 12px;
+      border: 2px solid #f39c12;
+      border-radius: 10px;
+      background: #2d2d44;
+      color: white;
+    }
+
+    #pin-submit {
+      background: #f39c12;
+      color: #1a1a2e;
+      border: none;
+      border-radius: 10px;
+      padding: 12px 32px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    #pin-error { color: #e74c3c; font-size: 0.9rem; display: none; }
+
+    #main { display: none; }
+
+    header {
+      background: #16213e;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 2px solid #f39c12;
+    }
+
+    header h1 { font-size: 1.2rem; color: #f39c12; }
+
+    .live-dot {
+      width: 10px; height: 10px;
+      background: #2ecc71;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 6px;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .status-text { font-size: 0.85rem; color: #aaa; }
+
+    #orders-container {
+      padding: 16px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+    }
+
+    .order-card {
+      background: #16213e;
+      border-radius: 12px;
+      border-left: 4px solid #f39c12;
+      padding: 16px;
+      transition: all 0.3s;
+    }
+
+    .order-card.done {
+      border-left-color: #2ecc71;
+      opacity: 0.5;
+    }
+
+    .order-card.new-flash {
+      animation: flash 0.5s ease-out 3;
+    }
+
+    @keyframes flash {
+      0%, 100% { background: #16213e; }
+      50% { background: #2c3e50; }
+    }
+
+    .order-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+
+    .order-table {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #f39c12;
+    }
+
+    .order-time {
+      font-size: 0.8rem;
+      color: #888;
+    }
+
+    .order-status {
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .order-status.new { background: #e74c3c; color: white; }
+    .order-status.done { background: #2ecc71; color: #1a1a2e; }
+
+    .item-list { margin-bottom: 12px; }
+
+    .item-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      border-bottom: 1px solid #2d3a52;
+      font-size: 0.9rem;
+    }
+
+    .item-row:last-child { border-bottom: none; }
+
+    .item-qty {
+      background: #f39c12;
+      color: #1a1a2e;
+      font-weight: 700;
+      border-radius: 4px;
+      padding: 1px 7px;
+      font-size: 0.85rem;
+      margin-right: 8px;
+      flex-shrink: 0;
+    }
+
+    .item-name { flex: 1; }
+
+    .order-notes {
+      background: #0d1b2a;
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-size: 0.8rem;
+      color: #f39c12;
+      margin-bottom: 12px;
+      font-style: italic;
+    }
+
+    .done-btn {
+      width: 100%;
+      background: #2ecc71;
+      color: #1a1a2e;
+      border: none;
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+
+    .done-btn:hover { opacity: 0.85; }
+    .done-btn:disabled { background: #555; color: #888; cursor: default; }
+
+    #empty-msg {
+      grid-column: 1/-1;
+      text-align: center;
+      padding: 60px 20px;
+      color: #555;
+      font-size: 1.1rem;
+    }
+
+    .order-id { font-size: 0.75rem; color: #666; margin-top: 4px; }
+  </style>
+</head>
+<body>
+
+<div id="pin-screen">
+  <h2>🍳 Kitchen Display</h2>
+  <p>Enter staff PIN to continue</p>
+  <input type="password" id="pin-input" maxlength="6" placeholder="••••" inputmode="numeric">
+  <div id="pin-error">Incorrect PIN</div>
+  <button id="pin-submit" onclick="checkPin()">Enter</button>
+</div>
+
+<div id="main">
+  <header>
+    <h1>🍳 Kitchen Orders</h1>
+    <div>
+      <span class="live-dot"></span>
+      <span class="status-text">Live</span>
+    </div>
+  </header>
+  <div id="orders-container">
+    <div id="empty-msg">No active orders</div>
+  </div>
+</div>
+
+<script src="firebase-config.js"></script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  window._firebaseReady = false;
+
+  const app = initializeApp(FIREBASE_CONFIG);
+  const db = getDatabase(app);
+
+  window._markDone = async (orderId) => {
+    const orderRef = ref(db, 'orders/' + orderId);
+    await update(orderRef, { status: 'done', completedAt: Date.now() });
+  };
+
+  function checkPin() {
+    const pin = document.getElementById('pin-input').value;
+    if (pin === STAFF_PIN) {
+      document.getElementById('pin-screen').style.display = 'none';
+      document.getElementById('main').style.display = 'block';
+      startListening();
+    } else {
+      document.getElementById('pin-error').style.display = 'block';
+      document.getElementById('pin-input').value = '';
+    }
+  }
+  window.checkPin = checkPin;
+
+  document.getElementById('pin-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') checkPin();
+  });
+
+  const seenIds = new Set();
+
+  function startListening() {
+    const ordersRef = ref(db, 'orders');
+    onValue(ordersRef, (snapshot) => {
+      const data = snapshot.val() || {};
+      renderOrders(data);
+    });
+  }
+
+  function timeAgo(ts) {
+    if (!ts) return '';
+    const diff = Math.floor((Date.now() - ts) / 1000);
+    if (diff < 60) return diff + 's ago';
+    if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+    return Math.floor(diff / 3600) + 'h ago';
+  }
+
+  function renderOrders(data) {
+    const container = document.getElementById('orders-container');
+    const entries = Object.entries(data).sort((a, b) => {
+      const tsA = typeof a[1].timestamp === 'number' ? a[1].timestamp : 0;
+      const tsB = typeof b[1].timestamp === 'number' ? b[1].timestamp : 0;
+      return tsA - tsB;
+    });
+
+    const active = entries.filter(([, o]) => o.status !== 'done');
+    const recentDone = entries.filter(([, o]) => o.status === 'done').slice(-3);
+    const toShow = [...active, ...recentDone];
+
+    if (toShow.length === 0) {
+      container.innerHTML = '<div id="empty-msg">No active orders</div>';
+      return;
+    }
+
+    container.innerHTML = '';
+    toShow.forEach(([id, order]) => {
+      const isNew = !seenIds.has(id) && order.status !== 'done';
+      if (order.status !== 'done') seenIds.add(id);
+
+      const card = document.createElement('div');
+      card.className = 'order-card' + (order.status === 'done' ? ' done' : '') + (isNew ? ' new-flash' : '');
+
+      const ts = typeof order.timestamp === 'number' ? order.timestamp : null;
+      const shortId = id.slice(-6).toUpperCase();
+
+      card.innerHTML = `
+        <div class="order-header">
+          <div>
+            <div class="order-table">Table ${order.table}</div>
+            <div class="order-id">#${shortId}</div>
+            <div class="order-time">${ts ? timeAgo(ts) : ''}</div>
+          </div>
+          <span class="order-status ${order.status === 'done' ? 'done' : 'new'}">${order.status === 'done' ? 'Done' : 'New'}</span>
+        </div>
+        <div class="item-list">
+          ${(order.items || []).map(item => `
+            <div class="item-row">
+              <span class="item-qty">×${item.qty}</span>
+              <span class="item-name">${item.name}</span>
+            </div>
+          `).join('')}
+        </div>
+        ${order.notes ? `<div class="order-notes">📝 ${order.notes}</div>` : ''}
+        <button class="done-btn" onclick="window._markDone('${id}')" ${order.status === 'done' ? 'disabled' : ''}>
+          ${order.status === 'done' ? '✓ Done' : '✓ Mark as Done'}
+        </button>
+      `;
+      container.appendChild(card);
+    });
+  }
+</script>
+</body>
+</html>

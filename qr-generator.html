@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QR Code Generator – Namaste Haifa</title>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; background: #f5f5f5; padding: 20px; }
+    h1 { font-size: 1.3rem; color: #c0392b; margin-bottom: 8px; }
+    p { color: #666; font-size: 0.9rem; margin-bottom: 16px; }
+
+    .config { background: white; border-radius: 10px; padding: 16px; margin-bottom: 20px; display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
+    .config label { font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px; }
+    .config input { border: 1px solid #ddd; border-radius: 6px; padding: 8px 10px; font-size: 0.9rem; width: 280px; }
+    .config button {
+      background: #c0392b; color: white; border: none; border-radius: 8px;
+      padding: 10px 20px; font-weight: 600; cursor: pointer; font-size: 0.9rem;
+    }
+
+    #grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, 200px);
+      gap: 16px;
+    }
+
+    .qr-card {
+      background: white;
+      border-radius: 10px;
+      padding: 16px;
+      text-align: center;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+
+    .qr-card h3 { font-size: 1rem; color: #c0392b; margin-bottom: 10px; }
+    .qr-card canvas { border-radius: 6px; }
+
+    .print-all {
+      background: #e67e22; color: white; border: none; border-radius: 8px;
+      padding: 12px 24px; font-weight: 600; cursor: pointer; font-size: 1rem;
+      margin-bottom: 20px; display: block;
+    }
+
+    @media print {
+      .config, .print-all, h1, p { display: none; }
+      #grid { gap: 10px; }
+      .qr-card { break-inside: avoid; box-shadow: none; border: 1px solid #ddd; }
+    }
+  </style>
+</head>
+<body>
+  <h1>QR Code Generator – Namaste Haifa</h1>
+  <p>Enter your live site URL, then print all QRs. Each links to the menu with the table number pre-filled.</p>
+
+  <div class="config">
+    <div>
+      <label>Your GitHub Pages URL (after deploying)</label>
+      <input type="text" id="base-url" placeholder="https://yourusername.github.io/namaste-haifa-ordering" value="https://yourusername.github.io/namaste-haifa-ordering">
+    </div>
+    <div>
+      <label>Tables</label>
+      <input type="number" id="table-count" value="20" min="1" max="100" style="width:80px">
+    </div>
+    <button onclick="generate()">Generate QRs</button>
+  </div>
+
+  <button class="print-all" onclick="window.print()">🖨 Print All QR Codes</button>
+
+  <div id="grid"></div>
+
+  <script>
+    function generate() {
+      const baseUrl = document.getElementById('base-url').value.trim().replace(/\/$/, '');
+      const count = parseInt(document.getElementById('table-count').value);
+      const grid = document.getElementById('grid');
+      grid.innerHTML = '';
+
+      for (let i = 1; i <= count; i++) {
+        const url = `${baseUrl}/index.html?table=${i}`;
+        const card = document.createElement('div');
+        card.className = 'qr-card';
+        card.innerHTML = `<h3>Table ${i}</h3>`;
+        const canvas = document.createElement('canvas');
+        card.appendChild(canvas);
+        grid.appendChild(card);
+
+        QRCode.toCanvas(canvas, url, { width: 160, margin: 1, color: { dark: '#2d1a00', light: '#ffffff' } });
+      }
+    }
+
+    generate();
+  </script>
+</body>
+</html>

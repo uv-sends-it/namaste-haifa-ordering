@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Orders – Namaste Haifa</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f5f5f5;
+      color: #1a1a1a;
+      min-height: 100vh;
+    }
+
+    #pin-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      gap: 16px;
+      padding: 24px;
+    }
+
+    #pin-screen h2 { font-size: 1.4rem; color: #c0392b; }
+    #pin-screen p { color: #888; font-size: 0.9rem; }
+
+    #pin-input {
+      font-size: 1.5rem;
+      letter-spacing: 0.5rem;
+      text-align: center;
+      width: 160px;
+      padding: 12px;
+      border: 2px solid #c0392b;
+      border-radius: 10px;
+      background: white;
+      color: #1a1a1a;
+    }
+
+    #pin-submit {
+      background: #c0392b;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 12px 32px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    #pin-error { color: #e74c3c; font-size: 0.9rem; display: none; }
+
+    #main { display: none; }
+
+    header {
+      background: linear-gradient(135deg, #c0392b, #e67e22);
+      color: white;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    header h1 { font-size: 1.2rem; }
+
+    .live-dot {
+      width: 10px; height: 10px;
+      background: #2ecc71;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 6px;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .filter-bar {
+      background: white;
+      padding: 10px 16px;
+      display: flex;
+      gap: 10px;
+      border-bottom: 1px solid #e0e0e0;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid #c0392b;
+      background: white;
+      color: #c0392b;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .filter-btn.active {
+      background: #c0392b;
+      color: white;
+    }
+
+    #orders-container { padding: 16px; }
+
+    .table-card {
+      background: white;
+      border-radius: 12px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+
+    .table-header {
+      background: linear-gradient(135deg, #c0392b, #e67e22);
+      color: white;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .table-title { font-size: 1.1rem; font-weight: 700; }
+    .table-status { font-size: 0.8rem; opacity: 0.85; }
+
+    .order-block { padding: 12px 16px; border-bottom: 1px solid #f0f0f0; }
+    .order-block:last-child { border-bottom: none; }
+
+    .order-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .order-num { font-size: 0.8rem; color: #888; }
+
+    .order-badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+
+    .badge-new { background: #fde8e8; color: #c0392b; }
+    .badge-done { background: #e8fde8; color: #27ae60; }
+
+    .bill-item {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.88rem;
+      padding: 3px 0;
+      color: #444;
+    }
+
+    .bill-item-name { flex: 1; }
+    .bill-item-qty { color: #888; margin-right: 8px; }
+    .bill-item-price { font-weight: 500; }
+
+    .order-notes-line {
+      font-size: 0.8rem;
+      color: #e67e22;
+      font-style: italic;
+      margin-top: 6px;
+    }
+
+    .table-total {
+      background: #fff8f0;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 2px solid #f0c080;
+    }
+
+    .total-label { font-weight: 700; font-size: 0.95rem; color: #555; }
+    .total-amount { font-weight: 700; font-size: 1.2rem; color: #c0392b; }
+
+    .print-btn {
+      background: #c0392b;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .clear-btn {
+      background: #ecf0f1;
+      color: #666;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .table-actions {
+      display: flex;
+      gap: 8px;
+      padding: 10px 16px;
+      background: #fafafa;
+      border-top: 1px solid #f0f0f0;
+    }
+
+    #empty-msg {
+      text-align: center;
+      padding: 60px 20px;
+      color: #aaa;
+      font-size: 1rem;
+    }
+
+    @media print {
+      .print-btn, .clear-btn, .filter-bar, header, .table-actions { display: none !important; }
+      .table-card { box-shadow: none; border: 1px solid #ccc; }
+      body { background: white; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="pin-screen">
+  <h2>🧾 Front Staff – Orders</h2>
+  <p>Enter staff PIN to continue</p>
+  <input type="password" id="pin-input" maxlength="6" placeholder="••••" inputmode="numeric">
+  <div id="pin-error">Incorrect PIN</div>
+  <button id="pin-submit" onclick="checkPin()">Enter</button>
+</div>
+
+<div id="main">
+  <header>
+    <h1>🧾 Active Orders</h1>
+    <div>
+      <span class="live-dot"></span>
+      <span style="font-size:0.85rem;opacity:0.9;">Live</span>
+    </div>
+  </header>
+
+  <div class="filter-bar">
+    <strong style="font-size:0.85rem;color:#666;">Show:</strong>
+    <button class="filter-btn active" id="filter-all" onclick="setFilter('all')">All Tables</button>
+    <button class="filter-btn" id="filter-active" onclick="setFilter('active')">Active Only</button>
+  </div>
+
+  <div id="orders-container">
+    <div id="empty-msg">No orders yet</div>
+  </div>
+</div>
+
+<script src="firebase-config.js"></script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  const app = initializeApp(FIREBASE_CONFIG);
+  const db = getDatabase(app);
+
+  window._clearTable = async (tableNum) => {
+    if (!confirm(`Clear all orders for Table ${tableNum}? (Table has been paid)`)) return;
+    const snapshot = await new Promise(resolve => {
+      const ordersRef = ref(db, 'orders');
+      const { onValue: ov } = { onValue: (r, cb) => { const u = ov2(r, snap => { u(); resolve(snap); }); } };
+      // use imported onValue
+    });
+    // Simple approach: mark all as 'cleared'
+    const ordersRef = ref(db, 'orders');
+    onValue(ordersRef, async (snap) => {
+      const data = snap.val() || {};
+      const promises = [];
+      Object.entries(data).forEach(([id, order]) => {
+        if (String(order.table) === String(tableNum)) {
+          promises.push(update(ref(db, 'orders/' + id), { status: 'cleared' }));
+        }
+      });
+      await Promise.all(promises);
+    }, { onlyOnce: true });
+  };
+
+  function checkPin() {
+    const pin = document.getElementById('pin-input').value;
+    if (pin === STAFF_PIN) {
+      document.getElementById('pin-screen').style.display = 'none';
+      document.getElementById('main').style.display = 'block';
+      startListening();
+    } else {
+      document.getElementById('pin-error').style.display = 'block';
+      document.getElementById('pin-input').value = '';
+    }
+  }
+  window.checkPin = checkPin;
+
+  document.getElementById('pin-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') checkPin();
+  });
+
+  let currentFilter = 'all';
+
+  window.setFilter = (f) => {
+    currentFilter = f;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('filter-' + f).classList.add('active');
+    if (window._lastData) renderOrders(window._lastData);
+  };
+
+  function startListening() {
+    const ordersRef = ref(db, 'orders');
+    onValue(ordersRef, (snapshot) => {
+      const data = snapshot.val() || {};
+      window._lastData = data;
+      renderOrders(data);
+    });
+  }
+
+  function timeAgo(ts) {
+    if (!ts) return '';
+    const diff = Math.floor((Date.now() - ts) / 1000);
+    if (diff < 60) return diff + 's ago';
+    if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+    return Math.floor(diff / 3600) + 'h ago';
+  }
+
+  function renderOrders(data) {
+    const container = document.getElementById('orders-container');
+
+    // Group by table
+    const byTable = {};
+    Object.entries(data).forEach(([id, order]) => {
+      if (order.status === 'cleared') return;
+      if (currentFilter === 'active' && order.status === 'done') return;
+      const t = String(order.table);
+      if (!byTable[t]) byTable[t] = [];
+      byTable[t].push({ id, ...order });
+    });
+
+    const tables = Object.keys(byTable).sort((a, b) => Number(a) - Number(b));
+
+    if (tables.length === 0) {
+      container.innerHTML = '<div id="empty-msg">No orders</div>';
+      return;
+    }
+
+    container.innerHTML = '';
+
+    tables.forEach(tableNum => {
+      const orders = byTable[tableNum].sort((a, b) => {
+        const tsA = typeof a.timestamp === 'number' ? a.timestamp : 0;
+        const tsB = typeof b.timestamp === 'number' ? b.timestamp : 0;
+        return tsA - tsB;
+      });
+
+      const hasNew = orders.some(o => o.status === 'new');
+      const tableTotal = orders.reduce((s, o) => s + (o.total || 0), 0);
+
+      const card = document.createElement('div');
+      card.className = 'table-card';
+
+      const ordersHtml = orders.map(order => {
+        const ts = typeof order.timestamp === 'number' ? order.timestamp : null;
+        const shortId = order.id.slice(-6).toUpperCase();
+        const itemsHtml = (order.items || []).map(item => `
+          <div class="bill-item">
+            <span class="bill-item-name">${item.name}</span>
+            <span class="bill-item-qty">×${item.qty}</span>
+            <span class="bill-item-price">$${(item.price * item.qty).toFixed(2)}</span>
+          </div>
+        `).join('');
+        return `
+          <div class="order-block">
+            <div class="order-meta">
+              <span class="order-num">#${shortId} · ${ts ? timeAgo(ts) : ''}</span>
+              <span class="order-badge ${order.status === 'done' ? 'badge-done' : 'badge-new'}">${order.status === 'done' ? 'Kitchen Done' : 'Preparing'}</span>
+            </div>
+            ${itemsHtml}
+            ${order.notes ? `<div class="order-notes-line">📝 ${order.notes}</div>` : ''}
+          </div>
+        `;
+      }).join('');
+
+      card.innerHTML = `
+        <div class="table-header">
+          <span class="table-title">Table ${tableNum}</span>
+          <span class="table-status">${orders.length} order${orders.length > 1 ? 's' : ''} · ${hasNew ? '🔴 Preparing' : '✅ All done'}</span>
+        </div>
+        ${ordersHtml}
+        <div class="table-total">
+          <span class="total-label">Total to collect</span>
+          <span class="total-amount">$${tableTotal.toFixed(2)}</span>
+        </div>
+        <div class="table-actions">
+          <button class="print-btn" onclick="window.print()">🖨 Print Bill</button>
+          <button class="clear-btn" onclick="window._clearTable('${tableNum}')">✓ Paid – Clear Table</button>
+        </div>
+      `;
+
+      container.appendChild(card);
+    });
+  }
+</script>
+</body>
+</html>
